@@ -154,6 +154,8 @@
   .tbl tr.nic td.n{color:var(--green);font-weight:600}
   .tbl tr.nic td.d{padding-left:22px;color:var(--ink)}
   .tbl tr.go{cursor:pointer} .tbl tr.go:hover td{filter:brightness(.97)}
+  .tbl .tgl{display:inline-block;width:1.1em;color:var(--muted);font-weight:400}
+  .tbl .cnt{display:block;font-family:var(--mono);font-size:12px;color:var(--muted);font-weight:400;font-style:normal}
   .tbl tr.cp{cursor:copy}
   .tbl tr.flash td{outline:2px solid var(--green);outline-offset:-2px}
   .tbl .hl{background:color-mix(in srgb,var(--green) 22%,transparent);border-radius:2px}
@@ -206,7 +208,7 @@
     <div class="box field">
       <label class="lbl" for="lq">Fracción, partida o descripción</label>
       <div class="libro-bar"><input id="lq" type="search" autocomplete="off" spellcheck="false" placeholder="854449, 8544.49.99, «cable de cobre» o NOM-003-SCFI" value="854449"></div>
-      <p class="hint">Déjalo vacío para ver todo el catálogo por secciones y capítulos. Como el libro de la TIGIE: capítulo, partida, subpartida, fracción y NICO. Toca un capítulo o partida para entrar; toca una fracción o NICO para copiar su código.</p>
+      <p class="hint">Déjalo vacío para ver todo el catálogo por secciones y capítulos. Como el libro de la TIGIE: capítulo, partida, subpartida, fracción y NICO. Toca un capítulo, partida o subpartida para desplegarla o plegarla; toca una fracción o NICO para copiar su código.</p>
       <div class="chips" id="lex">
         <button class="chip" data-q="">Ver catálogo completo</button>
         <button class="chip" data-q="854449">854449</button>
@@ -446,56 +448,81 @@
   var lrows=[], lshown=0, LPAGE=40, lst={}, lnico='';
   function pdot(p){ return p.slice(0,2)+'.'+p.slice(2); }
   function igiL(v){ return v==='' ? '' : (/^\d+(\.\d+)?$/.test(v) ? v+' %' : (/^ex/i.test(v)?'Exento':v)); }
-  function libroHTML(from,to){
+  /* Árbol desplegable: capítulo › partida › subpartida › fracción (con sus NICO).
+     Cada fila lleva su ruta (c85>p8526>s8526.91>f8526.91.01); al cerrar un nodo se quitan las filas que cuelgan de él. */
+  var LCLOSED={}, lbase=FR, lcat=true, lcnt={};
+  function countBase(){ lcnt={}; lbase.forEach(function(r){ var pc='c'+r.cap, pp=pc+'>p'+r.part, ps=pp+'>s'+r.f.slice(0,7); lcnt[pc]=(lcnt[pc]||0)+1; lcnt[pp]=(lcnt[pp]||0)+1; lcnt[ps]=(lcnt[ps]||0)+1; }); }
+  function tgl(open){ return '<span class="tgl" aria-hidden="true">'+(open?'▾':'▸')+'</span>'; }
+  function nodeRow(cls, path, open, code, text){
+    var n=lcnt[path]||0;
+    return '<tr class="'+cls+' go" data-path="'+path+'" data-open="'+(open?1:0)+'" aria-expanded="'+(open?'true':'false')+'"><td class="c">'+tgl(open)+code+'</td><td></td><td colspan="4">'+esc(text)+(open?'':'<span class="cnt">'+n+(n===1?' fracción':' fracciones')+'</span>')+'</td></tr>';
+  }
+  /* lim: nivel hasta el que se abre (1 capítulo, 2 partida, 3 subpartida, 4 todo). from: nivel del nodo que se está abriendo (0 = desde la raíz). */
+  function treeHTML(rows, lim, st, from){
     var h='';
-    for(var i=from;i<to;i++){
-      var r=lrows[i];
-      var sc=secOf(r.cap);
-      if(sc && lst.sec!==sc[2]){ lst.sec=sc[2]; h+='<tr class="sec"><td colspan="6">Sección '+sc[2]+' · '+esc(sc[3])+'</td></tr>'; }
-      if(lst.cap!==r.cap){ lst.cap=r.cap; lst.part=lst.sub=lst.dash=null; h+='<tr class="cap go" data-q="'+r.cap+'"><td class="c">'+r.cap+'</td><td></td><td colspan="4">'+esc(CAP[r.cap]||'')+'</td></tr>'; }
-      if(lst.part!==r.part){ lst.part=r.part; lst.sub=lst.dash=null; h+='<tr class="par go" data-q="'+r.part+'"><td class="c">'+pdot(r.part)+'</td><td></td><td colspan="4">'+esc(PT[r.part]||'')+'</td></tr>'; }
-      var sk=r.f.slice(0,7);
-      if(lst.sub!==sk){
-        lst.sub=sk;
-        if(r.dash && r.dash!==lst.dash && r.dash!==r.sub){ h+='<tr class="txt"><td></td><td></td><td colspan="4">'+esc(r.dash)+'</td></tr>'; }
-        lst.dash=r.dash;
-        h+='<tr class="sub go" data-q="'+sk+'"><td class="c">'+sk+'</td><td></td><td colspan="4">'+esc(r.sub||'')+'</td></tr>';
+    for(var i=0;i<rows.length;i++){
+      var r=rows[i], sk=r.f.slice(0,7), pc='c'+r.cap, pp=pc+'>p'+r.part, ps=pp+'>s'+sk, pf=ps+'>f'+r.f;
+      var oc=lim>1 && !LCLOSED[pc], op=oc && lim>2 && !LCLOSED[pp], os=op && lim>3 && !LCLOSED[ps];
+      if(from<1){
+        var sc=secOf(r.cap);
+        if(sc && st.sec!==sc[2]){ st.sec=sc[2]; h+='<tr class="sec"><td colspan="6">Sección '+sc[2]+' · '+esc(sc[3])+'</td></tr>'; }
+        if(st.cap!==r.cap){ st.cap=r.cap; st.part=st.sub=st.dash=null; h+=nodeRow('cap',pc,oc,r.cap,CAP[r.cap]||''); }
       }
-      h+='<tr class="fra cp" data-copy="'+r.f+'" title="Copiar '+r.f+'"><td class="c">'+r.f+'</td><td class="n"></td><td class="d">'+esc(r.d)+tagsHTML(r.f,true)+'<span class="mi">'+esc(r.u)+' · IMP. '+esc(igiL(r.imp)||'—')+' · EXP. '+esc(igiL(r.exp)||'—')+'</span></td><td class="u">'+esc(r.u)+'</td><td class="r">'+esc(igiL(r.imp))+'</td><td class="r">'+esc(igiL(r.exp))+'</td></tr>';
+      if(!oc) continue;
+      if(from<2 && st.part!==r.part){ st.part=r.part; st.sub=st.dash=null; h+=nodeRow('par',pp,op,pdot(r.part),PT[r.part]||''); }
+      if(!op) continue;
+      if(from<3 && st.sub!==sk){
+        st.sub=sk;
+        if(r.dash && r.dash!==st.dash && r.dash!==r.sub){ h+='<tr class="txt" data-path="'+pp+'>d'+sk+'"><td></td><td></td><td colspan="4">'+esc(r.dash)+'</td></tr>'; }
+        st.dash=r.dash;
+        h+=nodeRow('sub',ps,os,sk,r.sub||'');
+      }
+      if(!os) continue;
+      h+='<tr class="fra cp" data-path="'+pf+'" data-copy="'+r.f+'" title="Copiar '+r.f+'"><td class="c">'+r.f+'</td><td class="n"></td><td class="d">'+esc(r.d)+tagsHTML(r.f,true)+'<span class="mi">'+esc(r.u)+' · IMP. '+esc(igiL(r.imp)||'—')+' · EXP. '+esc(igiL(r.exp)||'—')+'</span></td><td class="u">'+esc(r.u)+'</td><td class="r">'+esc(igiL(r.imp))+'</td><td class="r">'+esc(igiL(r.exp))+'</td></tr>';
       for(var k=0;k<r.n.length;k++){
-        var nn=r.n[k], on=(lnico && nn[0]===lnico);
-        h+='<tr class="nic cp" data-copy="'+r.f+'.'+nn[0]+'" title="Copiar '+r.f+'.'+nn[0]+'"><td class="c"></td><td class="n">'+nn[0]+'</td><td class="d">'+esc(nn[1])+'</td><td></td><td></td><td></td></tr>';
+        var nn=r.n[k];
+        h+='<tr class="nic cp" data-path="'+pf+'>n'+nn[0]+'" data-copy="'+r.f+'.'+nn[0]+'" title="Copiar '+r.f+'.'+nn[0]+'"><td class="c"></td><td class="n">'+nn[0]+'</td><td class="d">'+esc(nn[1])+'</td><td></td><td></td><td></td></tr>';
       }
     }
     return h;
   }
-  var CNT={}; FR.forEach(function(r){ CNT[r.cap]=(CNT[r.cap]||0)+1; });
-  function indexHTML(){
-    var h='';
-    SEC.forEach(function(sc){
-      var rows='';
-      for(var c=sc[0];c<=sc[1];c++){ var k=(c<10?'0':'')+c; if(!CNT[k]) continue; rows+='<tr class="cap go" data-q="'+k+'"><td class="c">'+k+'</td><td></td><td>'+esc(CAP[k]||'')+'<span class="mi" style="display:block;font-family:var(--mono);font-size:12px;color:var(--muted);font-weight:400">'+CNT[k]+' fracciones</span></td><td class="u"></td><td class="r"></td><td class="r"></td></tr>'; }
-      if(rows) h+='<tr class="sec"><td colspan="6">Sección '+sc[2]+' · '+esc(sc[3])+'</td></tr>'+rows;
-    });
-    return h;
+  function toggleNode(tr){
+    var path=tr.getAttribute('data-path'), open=tr.getAttribute('data-open')==='1', pre=path+'>';
+    if(open){
+      var nx=tr.nextElementSibling;
+      while(nx && (nx.getAttribute('data-path')||'').indexOf(pre)===0){ var dn=nx.nextElementSibling; nx.remove(); nx=dn; }
+      LCLOSED[path]=1;
+    } else {
+      delete LCLOSED[path];
+      var lv=path.split('>').length, seg=path.split('>');
+      var rows=lbase.filter(function(r){ return ('c'+r.cap)===seg[0] && (lv<2 || ('p'+r.part)===seg[1]) && (lv<3 || ('s'+r.f.slice(0,7))===seg[2]); });
+      if(!lcat){ var vis={}; lbase.slice(0,lshown).forEach(function(r){ vis[r.f]=1; }); rows=rows.filter(function(r){ return vis[r.f]; }); }
+      var st={cap:rows.length?rows[0].cap:null, part:lv>=2&&rows.length?rows[0].part:null, sub:lv>=3&&rows.length?rows[0].f.slice(0,7):null};
+      tr.insertAdjacentHTML('afterend', treeHTML(rows, lcat?lv+1:4, st, lv));
+    }
+    var nopen=!open, cnt=tr.querySelector('.cnt'), t=tr.querySelector('.tgl');
+    tr.setAttribute('data-open', nopen?1:0); tr.setAttribute('aria-expanded', nopen?'true':'false'); if(t) t.textContent=nopen?'▾':'▸';
+    if(nopen && cnt) cnt.remove();
+    if(!nopen && !cnt){ var n=lcnt[path]||0; tr.lastElementChild.insertAdjacentHTML('beforeend','<span class="cnt">'+n+(n===1?' fracción':' fracciones')+'</span>'); }
   }
   function runLibro(){
     var q=lqEl.value, res;
     if(/^[\d.\s]+$/.test(q) && q.replace(/\D/g,'').length>8){ lnico=q.replace(/\D/g,'').slice(8,10); q=q.replace(/\D/g,'').slice(0,8); }
     else lnico='';
     res=search(q);
-    lempty.innerHTML=''; lbody.innerHTML=''; lst={}; lshown=0; lmore.hidden=true;
-    if(res.kind==='empty'){ lrows=[]; lwrap.hidden=false; lmeta.textContent='Catálogo completo · toca un capítulo para ver sus partidas, fracciones y NICO'; lbody.innerHTML=indexHTML(); return; }
+    lempty.innerHTML=''; lbody.innerHTML=''; lst={}; lshown=0; lmore.hidden=true; LCLOSED={};
+    if(res.kind==='empty'){ lrows=[]; lbase=FR; lcat=true; countBase(); lwrap.hidden=false; lmeta.textContent='Catálogo completo · toca un capítulo, partida o subpartida para desplegarla'; lbody.innerHTML=treeHTML(FR,1,{},0); return; }
     lrows=res.rows.slice().sort(function(a,b){ return a.f<b.f?-1:a.f>b.f?1:0; });
+    lbase=lrows; lcat=false; countBase();
     if(!lrows.length){ lwrap.hidden=true; lmeta.textContent='0 resultados'; lempty.innerHTML='<div class="empty">Sin coincidencias. Prueba otra palabra o un código más corto.</div>'; return; }
     lwrap.hidden=false;
     var nn=lrows.reduce(function(a,r){return a+r.n.length;},0);
-    lmeta.textContent=lrows.length.toLocaleString('es-MX')+(lrows.length===1?' fracción':' fracciones')+' · '+nn.toLocaleString('es-MX')+' NICO'+(res.relaxed?' · coincidencia parcial de palabras':'')+(res.kind==='text'?' · en orden de código':'')+(res.kind==='nom'?' · sujetas a '+lqEl.value.trim().toUpperCase():'');
+    lmeta.textContent=lrows.length.toLocaleString('es-MX')+(lrows.length===1?' fracción':' fracciones')+' · '+nn.toLocaleString('es-MX')+' NICO'+(res.relaxed?' · coincidencia parcial de palabras':'')+(res.kind==='text'?' · en orden de código':'')+(res.kind==='nom'?' · sujetas a '+lqEl.value.trim().toUpperCase():'')+' · toca un nivel para plegarlo';
     moreLibro();
   }
   function moreLibro(){
     var end=Math.min(lrows.length,lshown+LPAGE);
-    lbody.insertAdjacentHTML('beforeend', libroHTML(lshown,end)); lshown=end;
+    lbody.insertAdjacentHTML('beforeend', treeHTML(lrows.slice(lshown,end),4,lst,0)); lshown=end;
     lmore.hidden = lshown>=lrows.length;
     lmore.textContent='Mostrar más ('+(lrows.length-lshown)+' fracciones restantes)';
   }
@@ -503,9 +530,9 @@
   lmore.addEventListener('click',moreLibro);
   document.getElementById('lex').addEventListener('click',function(e){ var b=e.target.closest('.chip'); if(!b) return; lqEl.value=b.getAttribute('data-q'); runLibro(); });
   lbody.addEventListener('click',function(e){
-    var fb=e.target.closest('[data-ficha]'); if(fb){ setTab('buscar'); qEl.value=fb.getAttribute('data-ficha'); run(); window.scrollTo({top:0,behavior:'smooth'}); return; }
+    var fbt=e.target.closest('[data-ficha]'); if(fbt){ setTab('buscar'); qEl.value=fbt.getAttribute('data-ficha'); run(); window.scrollTo({top:0,behavior:'smooth'}); return; }
     var tr=e.target.closest('tr'); if(!tr) return;
-    if(tr.hasAttribute('data-q')){ lqEl.value=tr.getAttribute('data-q'); runLibro(); window.scrollTo({top:0,behavior:'smooth'}); return; }
+    if(tr.hasAttribute('data-open')){ toggleNode(tr); return; }
     var c=tr.getAttribute('data-copy'); if(c){
       var ok=function(){ tr.classList.add('flash'); lmeta.textContent='Copiado: '+c; setTimeout(function(){tr.classList.remove('flash');},900); };
       try{ navigator.clipboard.writeText(c).then(ok,function(){ fb(); }); }catch(_){ fb(); }
