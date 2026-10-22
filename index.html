@@ -544,7 +544,7 @@
   var TABS=[['libro','tab-libro','p-libro'],['buscar','tab-buscar','p-buscar']];
   function setTab(which){ TABS.forEach(function(t){ var on=t[0]===which; document.getElementById(t[1]).setAttribute('aria-selected',on); document.getElementById(t[2]).hidden=!on; }); }
   TABS.forEach(function(t){ document.getElementById(t[1]).addEventListener('click',function(){ setTab(t[0]); }); });
-  runLibro();
+  lqEl.value=''; runLibro();
 
 })();
 </script>
