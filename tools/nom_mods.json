@@ -1,0 +1,35 @@
+{
+  "_ayuda": "Anexo 2.4.1 (NOM por fracción). 'base' es el acuerdo que publicó el anexo completo; 'modificaciones' son los acuerdos posteriores que lo cambian, en orden. Cuando el actualizador avise de un acuerdo nuevo de la SE que modifique el Anexo 2.4.1, agrega aquí su código del DOF (número de nota en sidof.segob.gob.mx) y su fecha.",
+  "base": {"codigo": "5672457", "dof": "25/11/2022"},
+  "modificaciones": [
+    {"codigo": "5698689", "dof": "16/08/2023"},
+    {"codigo": "5721087", "dof": "22/03/2024"},
+    {"codigo": "5737485", "dof": "28/08/2024"},
+    {"codigo": "5788992", "dof": "29/05/2026"},
+    {"codigo": "5799697", "dof": "28/09/2026"}
+  ],
+  "_ajustes": "Cambios que los acuerdos expresan en texto libre y el lector de tablas no puede deducir solo.",
+  "encabezados": {
+    "I": {"nom": "NOM-004-SE-2021", "texto": "Capítulos 4 y 5 de la NOM-004-SE-2021, Información comercial-Etiquetado de productos textiles, prendas de vestir, sus accesorios y ropa de casa", "dof": "13/01/2023"}
+  },
+  "eliminar_fracciones": [
+    {"numeral": "1", "seccion": null, "fraccion": "8413.60.01", "dof": "29/05/2026"}
+  ],
+  "suprimir_nicos": [
+    {"numeral": "1", "seccion": null, "fraccion": "8414.51.01", "nico": "00"},
+    {"numeral": "1", "seccion": null, "fraccion": "8414.51.99", "nico": "00"},
+    {"numeral": "1", "seccion": null, "fraccion": "8414.59.01", "nico": "00"},
+    {"numeral": "1", "seccion": null, "fraccion": "8414.59.99", "nico": "00"},
+    {"numeral": "3", "seccion": "I", "fraccion": "6115.95.01", "nico": "00"},
+    {"numeral": "3", "seccion": "I", "fraccion": "6115.96.01", "nico": "00"},
+    {"numeral": "3", "seccion": "I", "fraccion": "6210.10.01", "nico": "00"},
+    {"numeral": "3", "seccion": "I", "fraccion": "9619.00.04", "nico": "00"},
+    {"numeral": "3", "seccion": "III", "fraccion": "8414.51.01", "nico": "00"},
+    {"numeral": "3", "seccion": "III", "fraccion": "8414.51.99", "nico": "00"},
+    {"numeral": "3", "seccion": "III", "fraccion": "8414.59.01", "nico": "00"},
+    {"numeral": "3", "seccion": "III", "fraccion": "8414.59.99", "nico": "00"},
+    {"numeral": "3", "seccion": "XI", "fraccion": "6210.10.01", "nico": "00"}
+  ],
+  "_revisados": "Acuerdos de reglas y criterios de la SE ya revisados (fecha DOF). El actualizador avisa de cualquier acuerdo con fecha posterior a la última de esta lista.",
+  "revisados": ["10/10/2022", "25/11/2022", "13/01/2023", "16/08/2023", "27/10/2023", "22/03/2024", "15/04/2024", "28/08/2024", "24/09/2024", "02/09/2025", "12/02/2026", "02/04/2026", "28/05/2026", "29/05/2026", "28/09/2026"]
+}

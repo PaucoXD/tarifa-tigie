@@ -1,0 +1,25 @@
+Actualización 22/10/2026 18:05
+
+1) Fracciones, aranceles y NICO (SNICE)
+   archivo: FRACCIONESARANCELARIAS-LIGIE_20261014-20261014.xlsx
+   8,183 fracciones · 11,507 NICO
+2) Base Única (SNICE)
+   archivo: BASEUNICA-LIGIE_20261014-20261014.xlsb
+   1,235 partidas · 5,619 subpartidas · 8,015 fracciones con regulaciones o programas
+3) NOM (Anexo 2.4.1 del DOF)
+   2,544 fracciones con NOM · última modificación aplicada: DOF 28/09/2026
+   Comparación con la Base Única: coinciden 2,524; solo en la Base Única 1; solo en el anexo 20
+     solo en la Base Única: 8413.60.01
+4) Acuerdos nuevos de la SE que podrían cambiar NOM
+   leídos 19 acuerdos de reglas y criterios en el histórico del SNICE
+   ninguno nuevo desde el último revisado
+5) Cambios contra la versión anterior de la página
+   fracciones nuevas: 0
+   fracciones eliminadas: 0
+   cambios de arancel: 0
+   cambios de descripción o unidad: 0
+   cambios de NICO: 0
+   NOM: 0 fracciones nuevas, 0 quitadas, 0 con cambios
+   regulaciones/programas (Base Única): 0 fracciones con cambios
+
+Sin cambios: la página ya estaba al día.
